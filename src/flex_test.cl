@@ -2,6 +2,7 @@
    arrays are faked as Strings,
    X's respresent live cells, dots represent dead cells,
    no error checking is done *)
+   -- testing the single
 class CellularAutomaton inherits IO {
     population_map : String;
 
@@ -14,7 +15,7 @@ class CellularAutomaton inherits IO {
 
     print() : SELF_TYPE {
         {
-            out_string(population_map.concat("\n"));
+            out_string(population_map.concat("\n\\\c"));
             self;
         }
     };
@@ -56,7 +57,14 @@ class CellularAutomaton inherits IO {
             '.'
         fi
     };
-
+"
+\sadas \\\sd
+\\
+\0 \\0 \\\0 \\\\0
+"
+\0
+"\
+this is an escaped newline"
     evolve() : SELF_TYPE {
         (let position : Int in
         (let num : Int <- num_cells[] in
@@ -80,7 +88,7 @@ class Main {
     "\x00"
     main() : SELF_TYPE {
         {
-            cells <- (new CellularAutomaton).init("s                \a                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              ");
+            cells <- (new CellularAutomaton).init("s                \f                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              ");
             cells.print();
             (let countdown : Int <- 20 in
                 while countdown > 0 loop
@@ -95,3 +103,6 @@ class Main {
         }
     };
 };
+*)
+--
+(*)
