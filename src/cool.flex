@@ -49,9 +49,7 @@ int tooLong();
 
 %option noyywrap
 
-/*
- * Define names for regular expressions here.
- */
+ /* Define conditions for concise */
 %x COM_ENCLOSE
 %x COM_DASH
 %x STRING
@@ -65,6 +63,7 @@ LETTER      [0-9a-zA-Z_]
 TYPEID      [A-Z]{LETTER}*
 /* Object identifiers begin with a lower case letter */
 OBJECTID    [a-z]{LETTER}*
+/* Special notations in one character */
 SYMBOLS     [\+\-\*\/\=\<\.\~\,\;\:\(\)\@\{\}]
 
 %%
@@ -83,88 +82,56 @@ SYMBOLS     [\+\-\*\/\=\<\.\~\,\;\:\(\)\@\{\}]
 {SYMBOLS}   {return yytext[0];}
 
 
-    /* String, it could be the most crucial part */
-\"                      {
-    BEGIN(STRING);
-    string_len = 0;
+    /* the first letter of true and false must be lowercase;
+        the trailing letters may be upper or lower case */
+t(?i:rue)       {
+    cool_yylval.boolean = true;
+    return BOOL_CONST;
 }
-<STRING>\"              {
-    cool_yylval.symbol = stringtable.add_string(string_buf);
-    newStr();
-    BEGIN(0);
-    return STR_CONST;
-}
-<STRING,ESCAPED><<EOF>> {
-    error("EOF in string constant");
-    BEGIN(0);   /*Actually it may be not necessary since it's end of file*/
-    return ERROR;
-}
-<STRING,ESCAPED>\0      {
-    error("String contains null character");
-    newStr();
-    BEGIN(STRING_RES);
-    return ERROR;
-}
-<STRING>\n          {
-    error("Unterminated string constant");
-    newStr();
-    curr_lineno++;
-    BEGIN(0);
-    return ERROR;
-}
-
-<STRING>\\          {
-    if(string_len+1 >= MAX_STR_CONST){
-        return tooLong();
-    }
-    string_len++;
-    BEGIN(ESCAPED);
-}
-
-<ESCAPED>b          {strcat(string_buf, "\b");BEGIN(STRING);}
-<ESCAPED>t          {strcat(string_buf, "\t");BEGIN(STRING);}
-<ESCAPED>n          {strcat(string_buf, "\n");BEGIN(STRING);}
-<ESCAPED>f          {strcat(string_buf, "\f");BEGIN(STRING);}
-<ESCAPED>\\          {strcat(string_buf, "\\");BEGIN(STRING);}
-
-<ESCAPED>\n         {
-    if(string_len+1 >= MAX_STR_CONST){
-        return tooLong();
-    }
-    string_len++;
-    curr_lineno++;
-    strcat(string_buf, yytext);
-    BEGIN(STRING);
-}
-
-<ESCAPED>.          {
-    strcat(string_buf, yytext);
-    BEGIN(STRING);
-}
-<STRING>.           {
-    if(string_len+1 >= MAX_STR_CONST){
-        return tooLong();
-    }
-    string_len++;
-    strcat(string_buf, yytext);
-}
-<STRING_RES>\"      {BEGIN(0);}
-<STRING_RES>\\\n    {curr_lineno++;}
-<STRING_RES>\n      {
-    curr_lineno++;
-    BEGIN(0);
-}
-<STRING_RES>.       {}
-
-\n                  {curr_lineno++;}
-[ \f\r\t\v]         {}
-.                   {
-    error(yytext);
-    return ERROR;
+f(?i:alse)      {
+    cool_yylval.boolean = false;
+    return BOOL_CONST;
 }
 
 
-    /* Single line comments */
+    /* keywords:
+        "?i:" here indicate case insensitive
+    */
+(?i:class)      {return CLASS       ;}
+(?i:else)       {return ELSE        ;}
+(?i:fi)         {return FI          ;}
+(?i:if)         {return IF          ;}
+(?i:in)         {return IN          ;}
+(?i:inherits)   {return INHERITS    ;}
+(?i:let)        {return LET         ;}
+(?i:loop)       {return LOOP        ;}
+(?i:pool)       {return POOL        ;}
+(?i:then)       {return THEN        ;}
+(?i:while)      {return WHILE       ;}
+(?i:case)       {return CASE        ;}
+(?i:esac)       {return ESAC        ;}
+(?i:of)         {return OF          ;}
+(?i:new)        {return NEW         ;}
+(?i:isvoid)     {return ISVOID      ;}
+(?i:not)        {return NOT         ;}
+
+
+    /* Identifiers are strings (other than keywords) consisting of
+        letters, digits, and the underscore character */
+{TYPEID}    {
+    cool_yylval.symbol = stringtable.add_string(yytext);
+    return TYPEID;
+}
+
+{OBJECTID}  {
+    cool_yylval.symbol = stringtable.add_string(yytext);
+    return OBJECTID;
+}
+
+
+    /* Comments
+--------------------------------------------------------------------------------
+    Single line comments */
 "--"                {BEGIN(COM_DASH);}
 <COM_DASH>\n        {
     curr_lineno++;
@@ -199,63 +166,104 @@ SYMBOLS     [\+\-\*\/\=\<\.\~\,\;\:\(\)\@\{\}]
 }
 
 
-    /* keywords:
-        "?i:" here indicate case insensitive
-    */
-(?i:class)      {return CLASS       ;}
-(?i:else)       {return ELSE        ;}
-(?i:fi)         {return FI          ;}
-(?i:if)         {return IF          ;}
-(?i:in)         {return IN          ;}
-(?i:inherits)   {return INHERITS    ;}
-(?i:let)        {return LET         ;}
-(?i:loop)       {return LOOP        ;}
-(?i:pool)       {return POOL        ;}
-(?i:then)       {return THEN        ;}
-(?i:while)      {return WHILE       ;}
-(?i:case)       {return CASE        ;}
-(?i:esac)       {return ESAC        ;}
-(?i:of)         {return OF          ;}
-(?i:new)        {return NEW         ;}
-(?i:isvoid)     {return ISVOID      ;}
-(?i:not)        {return NOT         ;}
 
-    /* the first letter of true and false must be lowercase;
-        the trailing letters may be upper or lower case */
-t(?i:rue)       {
-    cool_yylval.boolean = true;
-    return BOOL_CONST;
+    /*
+--------------------------------------------------------------------------------
+    String*/
+\"                      {
+    BEGIN(STRING);
+    string_len = 0;
 }
-f(?i:alse)      {
-    cool_yylval.boolean = false;
-    return BOOL_CONST;
+<STRING>\"              {
+    cool_yylval.symbol = stringtable.add_string(string_buf);
+    newStr();
+    BEGIN(0);
+    return STR_CONST;
+}
+<STRING,ESCAPED><<EOF>> {
+    error("EOF in string constant");
+    BEGIN(0);   /*Actually it may be not necessary since it's end of file*/
+    return ERROR;
+}
+<STRING,ESCAPED>\0      {
+    error("String contains null character");
+    newStr();
+    BEGIN(STRING_RES);
+    return ERROR;
+}
+<STRING>\n          {
+    error("Unterminated string constant");
+    newStr();
+    curr_lineno++;
+    BEGIN(0);
+    return ERROR;
+}
+<STRING>\\          {
+    if(string_len+1 >= MAX_STR_CONST){
+        return tooLong();
+    }
+    string_len++;
+    BEGIN(ESCAPED);
+}
+<ESCAPED>b          {strcat(string_buf, "\b");BEGIN(STRING);}
+<ESCAPED>t          {strcat(string_buf, "\t");BEGIN(STRING);}
+<ESCAPED>n          {strcat(string_buf, "\n");BEGIN(STRING);}
+<ESCAPED>f          {strcat(string_buf, "\f");BEGIN(STRING);}
+<ESCAPED>\\          {strcat(string_buf, "\\");BEGIN(STRING);}
+
+<ESCAPED>\n         {
+    if(string_len+1 >= MAX_STR_CONST){
+        return tooLong();
+    }
+    string_len++;
+    curr_lineno++;
+    strcat(string_buf, yytext);
+    BEGIN(STRING);
 }
 
-
-    /* Identifiers are strings (other than keywords) consisting of
-        letters, digits, and the underscore character */
-{TYPEID}    {
-cool_yylval.symbol = stringtable.add_string(yytext);
-return TYPEID;
+<ESCAPED>.          {
+    strcat(string_buf, yytext);
+    BEGIN(STRING);
+}
+<STRING>.           {
+    if(string_len+1 >= MAX_STR_CONST){
+        return tooLong();
+    }
+    string_len++;
+    strcat(string_buf, yytext);
 }
 
-{OBJECTID}  {
-cool_yylval.symbol = stringtable.add_string(yytext);
-return OBJECTID;
+    /* Waiting for chance to resume the lexing */
+<STRING_RES>\"      {BEGIN(0);}
+<STRING_RES>\\\n    {curr_lineno++;}
+<STRING_RES>\n      {
+    curr_lineno++;
+    BEGIN(0);
 }
+<STRING_RES>.       {}
+
+
+    /* Here all case should be taken into account */
+\n                  {curr_lineno++;}
+[ \f\r\t\v]         {}
+.                   {
+    error(yytext);
+    return ERROR;
+}
+
 
  /*
   * Define regular expressions for the tokens of COOL here. Make sure, you
   * handle correctly special cases, like:
-  *   - Nested comments
-  *   - String constants: They use C like systax and can contain escape
+  yes   - Nested comments
+  yes   - String constants: They use C like systax and can contain escape
   *     sequences. Escape sequence \c is accepted for all characters c. Except
   *     for \n \t \b \f, the result is c.
-  *   - Keywords: They are case-insensitive except for the values true and
+  yes   - Keywords: They are case-insensitive except for the values true and
   *     false, which must begin with a lower-case letter.
-  *   - Multiple-character operators (like <-): The scanner should produce a
+  yes   - Multiple-character operators (like <-): The scanner should produce a
   *     single token for every such operator.
-  *   - Line counting: You should keep the global variable curr_lineno updated
+  yes   - Line counting: You should keep the global variable curr_lineno updated
   *     with the correct line number
   */
 %%
