@@ -62,6 +62,9 @@ class CellularAutomaton inherits IO {
 \\
 \0 \\0 \\\0 \\\\0
 "
+24qy3w5e4u6r57k68tl7y8o.h
+!@#$%^&*(()U)
++JO{}J:L[]
 \0
 "\
 this is an escaped newline"
@@ -88,7 +91,10 @@ class Main {
     "\x00"
     main() : SELF_TYPE {
         {
-            cells <- (new CellularAutomaton).init("s                \f                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              ");
+            cells <- (new CellularAutomaton).init("s               \a\b\c\d\e\f\g\h\1\2\3\4\5\6\\\0\                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        ");
+            "\
+            \\asdda\
+            "
             cells.print();
             (let countdown : Int <- 20 in
                 while countdown > 0 loop
@@ -105,4 +111,9 @@ class Main {
 };
 *)
 --
-(*)
+s
+(*)*)
+--
+
+"
+xxx"

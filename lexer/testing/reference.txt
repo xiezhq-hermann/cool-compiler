@@ -230,145 +230,175 @@
 #63 ERROR "\\"
 #63 INT_CONST 0
 #65 ERROR "Unterminated string constant"
-#65 ERROR "\\"
-#65 INT_CONST 0
-#67 STR_CONST "\nthis is an escaped newline"
-#68 OBJECTID evolve
-#68 '('
-#68 ')'
-#68 ':'
-#68 TYPEID SELF_TYPE
-#68 '{'
-#69 '('
-#69 LET
-#69 OBJECTID position
-#69 ':'
-#69 TYPEID Int
-#69 IN
-#70 '('
-#70 LET
-#70 OBJECTID num
-#70 ':'
-#70 TYPEID Int
-#70 ASSIGN
-#70 OBJECTID num_cells
-#70 ERROR "["
-#70 ERROR "]"
-#70 IN
+#65 INT_CONST 24
+#65 OBJECTID qy3w5e4u6r57k68tl7y8o
+#65 '.'
+#65 OBJECTID h
+#66 ERROR "!"
+#66 '@'
+#66 ERROR "#"
+#66 ERROR "$"
+#66 ERROR "%"
+#66 ERROR "^"
+#66 ERROR "&"
+#66 '*'
+#66 '('
+#66 '('
+#66 ')'
+#66 TYPEID U
+#66 ')'
+#67 '+'
+#67 TYPEID JO
+#67 '{'
+#67 '}'
+#67 TYPEID J
+#67 ':'
+#67 TYPEID L
+#67 ERROR "["
+#67 ERROR "]"
+#68 ERROR "\\"
+#68 INT_CONST 0
+#70 STR_CONST "\nthis is an escaped newline"
+#71 OBJECTID evolve
 #71 '('
-#71 LET
-#71 OBJECTID temp
+#71 ')'
 #71 ':'
-#71 TYPEID String
-#71 IN
-#72 '{'
-#73 WHILE
-#73 OBJECTID position
-#73 '<'
+#71 TYPEID SELF_TYPE
+#71 '{'
+#72 '('
+#72 LET
+#72 OBJECTID position
+#72 ':'
+#72 TYPEID Int
+#72 IN
+#73 '('
+#73 LET
 #73 OBJECTID num
-#73 LOOP
-#74 '{'
-#75 OBJECTID temp
-#75 ASSIGN
-#75 OBJECTID temp
-#75 '.'
-#75 OBJECTID concat
-#75 '('
-#75 OBJECTID cell_at_next_evolution
-#75 '('
-#75 OBJECTID position
-#75 ')'
-#75 ')'
-#75 ';'
+#73 ':'
+#73 TYPEID Int
+#73 ASSIGN
+#73 OBJECTID num_cells
+#73 ERROR "["
+#73 ERROR "]"
+#73 IN
+#74 '('
+#74 LET
+#74 OBJECTID temp
+#74 ':'
+#74 TYPEID String
+#74 IN
+#75 '{'
+#76 WHILE
 #76 OBJECTID position
-#76 ASSIGN
-#76 OBJECTID position
-#76 '+'
-#76 INT_CONST 1
-#76 ';'
-#77 '}'
-#78 POOL
+#76 '<'
+#76 OBJECTID num
+#76 LOOP
+#77 '{'
+#78 OBJECTID temp
+#78 ASSIGN
+#78 OBJECTID temp
+#78 '.'
+#78 OBJECTID concat
+#78 '('
+#78 OBJECTID cell_at_next_evolution
+#78 '('
+#78 OBJECTID position
+#78 ')'
+#78 ')'
 #78 ';'
-#79 OBJECTID population_map
+#79 OBJECTID position
 #79 ASSIGN
-#79 OBJECTID temp
+#79 OBJECTID position
+#79 '+'
+#79 INT_CONST 1
 #79 ';'
-#80 OBJECTID self
-#80 ';'
-#81 '}'
-#82 ')'
-#82 ')'
-#82 ')'
-#83 '}'
+#80 '}'
+#81 POOL
+#81 ';'
+#82 OBJECTID population_map
+#82 ASSIGN
+#82 OBJECTID temp
+#82 ';'
+#83 OBJECTID self
 #83 ';'
 #84 '}'
-#84 ';'
-#86 CLASS
-#86 TYPEID Main
-#86 '{'
-#87 OBJECTID cells
-#87 ':'
-#87 TYPEID CellularAutomaton
+#85 ')'
+#85 ')'
+#85 ')'
+#86 '}'
+#86 ';'
+#87 '}'
 #87 ';'
-#88 STR_CONST "x00"
-#89 OBJECTID main
-#89 '('
-#89 ')'
-#89 ':'
-#89 TYPEID SELF_TYPE
+#89 CLASS
+#89 TYPEID Main
 #89 '{'
-#90 '{'
-#91 OBJECTID cells
-#91 ASSIGN
-#91 '('
-#91 NEW
-#91 TYPEID CellularAutomaton
-#91 ')'
-#91 '.'
-#91 OBJECTID init
-#91 '('
-#91 STR_CONST "s                \f                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              "
-#91 ')'
-#91 ';'
-#92 OBJECTID cells
-#92 '.'
-#92 OBJECTID print
+#90 OBJECTID cells
+#90 ':'
+#90 TYPEID CellularAutomaton
+#90 ';'
+#91 STR_CONST "x00"
+#92 OBJECTID main
 #92 '('
 #92 ')'
-#92 ';'
-#93 '('
-#93 LET
-#93 OBJECTID countdown
-#93 ':'
-#93 TYPEID Int
-#93 ASSIGN
-#93 INT_CONST 20
-#93 IN
-#94 WHILE
-#94 OBJECTID countdown
-#94 ERROR ">"
-#94 INT_CONST 0
-#94 LOOP
-#95 '{'
-#96 OBJECTID cells
-#96 '.'
-#96 OBJECTID evolve
-#96 '('
-#96 ')'
-#96 ';'
-#97 OBJECTID cells
-#97 '.'
-#97 OBJECTID print
-#97 '('
-#97 ')'
-#97 ';'
-#98 OBJECTID countdown
-#98 ASSIGN
-#98 OBJECTID countdown
-#98 '-'
-#98 INT_CONST 1
+#92 ':'
+#92 TYPEID SELF_TYPE
+#92 '{'
+#93 '{'
+#94 OBJECTID cells
+#94 ASSIGN
+#94 '('
+#94 NEW
+#94 TYPEID CellularAutomaton
+#94 ')'
+#94 '.'
+#94 OBJECTID init
+#94 '('
+#94 STR_CONST "s               a\bcde\fgh123456\\0                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        "
+#94 ')'
+#94 ';'
+#97 STR_CONST "\n            \\asdda\n            "
+#98 OBJECTID cells
+#98 '.'
+#98 OBJECTID print
+#98 '('
+#98 ')'
 #98 ';'
-#100 POOL
-#101 ')'
-#101 ';'
-#109 ERROR "EOF in comment"
+#99 '('
+#99 LET
+#99 OBJECTID countdown
+#99 ':'
+#99 TYPEID Int
+#99 ASSIGN
+#99 INT_CONST 20
+#99 IN
+#100 WHILE
+#100 OBJECTID countdown
+#100 ERROR ">"
+#100 INT_CONST 0
+#100 LOOP
+#101 '{'
+#102 OBJECTID cells
+#102 '.'
+#102 OBJECTID evolve
+#102 '('
+#102 ')'
+#102 ';'
+#103 OBJECTID cells
+#103 '.'
+#103 OBJECTID print
+#103 '('
+#103 ')'
+#103 ';'
+#104 OBJECTID countdown
+#104 ASSIGN
+#104 OBJECTID countdown
+#104 '-'
+#104 INT_CONST 1
+#104 ';'
+#106 POOL
+#107 ')'
+#107 ';'
+#114 OBJECTID s
+#119 ERROR "Unterminated string constant"
+#119 OBJECTID xxx
+#120 ERROR "Unterminated string constant"
