@@ -398,7 +398,9 @@
 #106 POOL
 #107 ')'
 #107 ';'
-#114 OBJECTID s
-#119 ERROR "Unterminated string constant"
-#119 OBJECTID xxx
+#114 ERROR "String contains null character."
+#115 OBJECTID s
 #120 ERROR "Unterminated string constant"
+#120 OBJECTID xxx
+#121 ERROR "Unterminated string constant"
+#121 ERROR "EOF in string constant"

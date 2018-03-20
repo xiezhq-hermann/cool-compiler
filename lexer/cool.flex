@@ -61,7 +61,6 @@ int tooLong();
 %x ESCAPED
 /*****************************************/
 
-
 DIGIT       [0-9]
 LETTER      [0-9a-zA-Z_]
 /* Type identifiers begin with a capital letter */
@@ -74,7 +73,7 @@ SYMBOLS     [\+\-\*\/\=\<\.\~\,\;\:\(\)\@\{\}]
 WS          [ \f\r\t\v]
 
 
-%%
+%% /*-----------------------------------------------------------------------*/
 
     /* Integers are non-empty strings of digits 0-9 */
 {DIGIT}+    {
@@ -198,7 +197,6 @@ f(?i:alse)      {
 }
 <STRING,ESCAPED><<EOF>> {
     error("EOF in string constant");
-    curr_lineno++;  /*here new line should be tested*/
     BEGIN(0);
     return strError();
 }
@@ -220,6 +218,8 @@ f(?i:alse)      {
     }else{
         string_len++;
         BEGIN(ESCAPED);
+        /* create a new escaped state inside STRING
+            note to resume back everytime*/
     }
 }
 
@@ -244,7 +244,7 @@ f(?i:alse)      {
 }
 
 <ESCAPED>.          {
-    /* only one char can \ be workable */
+    /* only one char after \ will be effected */
     strcat(string_buf, yytext);
     BEGIN(STRING);
 }
@@ -264,34 +264,22 @@ f(?i:alse)      {
     curr_lineno++;
     BEGIN(0);
 }
+    /* count line and skip all useless strings */
 <STRING_RES>\\\n    {curr_lineno++;}
 <STRING_RES>.       {}
 
 
-    /* Here all case should be taken into account */
+    /* Here all cases should be taken into account */
 \n                  {curr_lineno++;}
+    /* eat up spaces and report all invalid tokens */
 {WS}                {}
 .                   {
     error(yytext);
     return ERROR;
 }
 
+%% /*------------------------------------------------------------------------*/
 
- /*
-  * Define regular expressions for the tokens of COOL here. Make sure, you
-  * handle correctly special cases, like:
-  yes   - Nested comments
-  yes   - String constants: They use C like systax and can contain escape
-  *     sequences. Escape sequence \c is accepted for all characters c. Except
-  *     for \n \t \b \f, the result is c.
-  yes   - Keywords: They are case-insensitive except for the values true and
-  *     false, which must begin with a lower-case letter.
-  yes   - Multiple-character operators (like <-): The scanner should produce a
-  *     single token for every such operator.
-  yes   - Line counting: You should keep the global variable curr_lineno updated
-  *     with the correct line number
-  */
-%%
 
     /* Auxiliary functions here */
 void error(char* msg){
@@ -299,10 +287,12 @@ void error(char* msg){
 }
 
 void clearBuf(){
+    /* clear the string buffer */
     string_buf[0] = '\0';
 }
 
 int strError(){
+    /* for general use of error in string */
     clearBuf();
     return ERROR;
 }
