@@ -32,6 +32,6 @@
 *.app
 
 # c++ file in lexer
-lexer/*.cc
+*/*.cc
 
 
