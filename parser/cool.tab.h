@@ -70,7 +70,8 @@ extern int cool_yydebug;
     ASSIGN = 280,
     NOT = 281,
     LE = 282,
-    ERROR = 283
+    ERROR = 283,
+    let_i = 285
   };
 #endif
 /* Tokens.  */
@@ -100,6 +101,7 @@ extern int cool_yydebug;
 #define NOT 281
 #define LE 282
 #define ERROR 283
+#define let_i 285
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -123,7 +125,7 @@ union YYSTYPE
   Expressions expressions;
   char *error_msg;
 
-#line 127 "cool.tab.h" /* yacc.c:1909  */
+#line 129 "cool.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

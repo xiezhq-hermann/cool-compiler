@@ -100,14 +100,21 @@ extern int VERBOSE_ERRORS;
 %type <features> optional_feature_list
 %type <features> feature_list
 %type <feature> feature
+
+%type <formals> optional_formal_list
 %type <formals> formal_list
+%type <formal> formal
+
 %type <cases> case_list
+
 %type <expressions> expr_list
+%type <expressions> optional_expr_aux
 %type <expressions> expr_aux
 %type <expression> expr
 %type <expression> expr_let
 
 /* Precedence declarations go here. */
+%left let_i
 %right ASSIGN
 %left NOT
 %nonassoc LE '<' '='
@@ -117,6 +124,7 @@ extern int VERBOSE_ERRORS;
 %left '~'
 %left '@'
 %left '.'
+
 
 %%
 /*
@@ -166,34 +174,48 @@ feature_list
         // handling error in features
         | error ';'
                 { yyclearin; $$ = NULL; }
+        | error feature_list ';'
+                { yyclearin; $$ = NULL; }
         ;
 
 feature : OBJECTID ':' TYPEID
                 { $$ = attr($1, $3, no_expr()); }
-        | OBJECTID '(' formal_list ')' ':' TYPEID '{' expr '}'
+        | OBJECTID '(' optional_formal_list ')' ':' TYPEID '{' expr '}'
                 { $$ = method($1, $3, $6, $8); }
         | OBJECTID ':' TYPEID ASSIGN expr
                 { $$ = attr($1, $3, $5); }
         ;
 
-formal_list
-        :       { $$ = nil_Formals(); }
-        | OBJECTID ':' TYPEID
-                { $$ = single_Formals(formal($1, $3)); }
-        | formal_list ',' OBJECTID ':' TYPEID
-                { $$ = append_Formals($1, single_Formals(formal($3, $5))); }
+optional_formal_list
+        : /* empty */
+                { $$ = nil_Formals(); }
+        | formal_list
+                { $$ = $1; }
         ;
 
+formal_list
+        : formal
+                { $$ = single_Formals($1); }
+        | formal_list ',' formal
+                { $$ = append_Formals($1, single_Formals($3)); }
+        ;
+
+formal  : OBJECTID ':' TYPEID
+                { $$ = formal($1, $3); }
+        ;
+
+/* the largest syntactic category */
 expr    : OBJECTID ASSIGN expr
                 { $$ = assign($1, $3); }
 
         /* dispatch */
-        | expr '.' OBJECTID '(' expr_aux ')'
+        | expr '.' OBJECTID '(' optional_expr_aux ')'
                 { $$ = dispatch($1, $3, $5); }
-        | OBJECTID '(' expr_aux ')'
-                { $$ = dispatch(object(idtable.add_string("self")), $1, $3); }
-        | expr '@' TYPEID '.' OBJECTID '(' expr_aux ')'
+        | expr '@' TYPEID '.' OBJECTID '(' optional_expr_aux ')'
                 { $$ = static_dispatch($1, $3, $5, $7); }
+        | OBJECTID '(' optional_expr_aux ')'
+                { $$ = dispatch(object(idtable.add_string("self")), $1, $3); }
+
 
         /* control flow */
         | IF expr THEN expr ELSE expr FI
@@ -205,9 +227,17 @@ expr    : OBJECTID ASSIGN expr
         | '{' expr_list '}'
                 { $$ = block($2); }
 
-        /* LET expression */
-        | LET expr_let
-                { $$ = $2; }
+        /* LET expression, not the Precedence */
+        | LET OBJECTID ':' TYPEID IN expr %prec let_i
+                { $$ = let($2, $4, no_expr(), $6); }
+        | LET OBJECTID ':' TYPEID ASSIGN expr IN expr %prec let_i
+                { $$ = let($2, $4, $6, $8); }
+        | LET OBJECTID ':' TYPEID ',' expr_let
+                { $$ = let($2, $4, no_expr(), $6); }
+        | LET OBJECTID ':' TYPEID ASSIGN expr ',' expr_let
+                { $$ = let($2, $4, $6, $8); }
+        | LET error IN expr %prec let_i
+                { yyclearin; $$ = NULL; }
 
         /* CASE expression */
         | CASE expr OF case_list ESAC
@@ -254,8 +284,14 @@ expr    : OBJECTID ASSIGN expr
                 { $$ = bool_const($1); }
         ;
 
-expr_aux:       { $$ = nil_Expressions(); }
-        | expr  { $$ = single_Expressions($1); }
+optional_expr_aux
+        : /* empty */
+                { $$ = nil_Expressions(); }
+        | expr_aux
+                { $$ = $1; }
+        ;
+
+expr_aux: expr  { $$ = single_Expressions($1); }
         | expr_aux ',' expr
                 { $$ = append_Expressions($1, single_Expressions($3)); }
         ;
@@ -265,21 +301,25 @@ expr_list
                 { $$ = single_Expressions($1); }
         | expr_list expr ';'
                 { $$ = append_Expressions($1, single_Expressions($2)); }
+        /* handling the error in block */
         | error ';'
+                { yyclearin; $$ = NULL; }
+        | error expr_list ';'
                 { yyclearin; $$ = NULL; }
         ;
 
-expr_let: OBJECTID ':' TYPEID IN expr
+expr_let: OBJECTID ':' TYPEID expr_let
+                { $$ = let($1, $3, no_expr(), $4); }
+        | OBJECTID ':' TYPEID IN expr %prec let_i
                 { $$ = let($1, $3, no_expr(), $5); }
-        | OBJECTID ':' TYPEID ASSIGN expr IN expr
+        | OBJECTID ':' TYPEID ASSIGN expr expr_let
+                { $$ = let($1, $3, $5, $6); }
+        | OBJECTID ':' TYPEID ASSIGN expr IN expr %prec let_i
                 { $$ = let($1, $3, $5, $7); }
-        | OBJECTID ':' TYPEID ',' expr_let
-                { $$ = let($1, $3, no_expr(), $5); }
-        | OBJECTID ':' TYPEID ASSIGN expr ',' expr_let
-                { $$ = let($1, $3, $5, $7); }
-        | error IN expr
+        /*handling the error in let Assigning*/
+        | error IN expr %prec let_i
                 { yyclearin; $$ = NULL; }
-        | error ',' expr_let
+        | error expr_let
                 { yyclearin; $$ = NULL; }
         ;
 
