@@ -1,0 +1,56 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+*.pdf
+
+tools-bin/
+.vscode/c_cpp_properties.json
+.vscode/settings.json
+src/ast-lex.cc
+src/ast-lex.d
+src/ast-parse.cc
+src/ast-parse.d
+src/cool-tree.cc
+src/cool-tree.d
+src/dumptype.cc
+src/dumptype.d
+src/handle_flags.cc
+src/handle_flags.d
+src/semant
+src/semant.d
+src/semant-phase.cc
+src/semant-phase.d
+src/stringtab.cc
+src/stringtab.d
+src/symtab_example.cc
+src/symtab_example.d
+src/tree.cc
+src/tree.d
+src/utilities.cc
+src/utilities.d
