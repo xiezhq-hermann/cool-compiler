@@ -217,7 +217,7 @@ void ClassTable::construct_class_table()
 
     // First add symbol No_class to the class table
     // TODO: Is this necessary? Commenting out this line seems to be OK, but perserving it seems to be more sound?
-    this->class_table->addid(No_class, nullptr);
+    this->class_table->addid(No_class, NULL);
 
     // Iterate through the class list and construct the class table
     // Several verifications are done during this iteration
@@ -425,4 +425,5 @@ void program_class::semant()
     }
 
     // Phase II: Check the rest
+
 }

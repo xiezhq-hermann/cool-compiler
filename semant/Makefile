@@ -13,7 +13,7 @@ CPPINCLUDE= -I. -I${SUPPORT}/include -I${SUPPORT}/src
 
 
 CC=g++
-CFLAGS=-g -Wall -Wno-unused ${CPPINCLUDE} -DDEBUG -std=c++11
+CFLAGS=-g -Wall -Wno-unused ${CPPINCLUDE} -DDEBUG
 
 DEPEND = ${CC} -MM ${CPPINCLUDE}
 
