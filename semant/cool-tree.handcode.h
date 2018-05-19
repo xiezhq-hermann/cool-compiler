@@ -44,32 +44,36 @@ typedef Expressions_class *Expressions;
 typedef list_node<Case> Cases_class;
 typedef Cases_class *Cases;
 
-#define Program_EXTRAS                          \
-virtual void semant() = 0;			\
-virtual void dump_with_types(ostream&, int) = 0; 
+#define Program_EXTRAS                        \
+virtual void semant() = 0;					   \
+virtual void dump_with_types(ostream&, int) = 0;\
 
 
-
-#define program_EXTRAS                          \
-void semant();     				\
-void dump_with_types(ostream&, int);            
-
-#define Class__EXTRAS                   \
-virtual Symbol get_filename() = 0;      \
-virtual void dump_with_types(ostream&,int) = 0; 
+#define program_EXTRAS            \
+void semant();     				   \
+void dump_with_types(ostream&, int);\
 
 
-#define class__EXTRAS                                 \
-Symbol get_filename() { return filename; }             \
-void dump_with_types(ostream&,int);                    
+#define Class__EXTRAS                    \
+virtual Symbol get_filename() = 0;        \
+virtual Symbol get_name_symbol() = 0;      \
+virtual Symbol get_parent_name_symbol() = 0;\
+virtual void dump_with_types(ostream&,int) = 0;
+
+
+#define class__EXTRAS                          \
+Symbol get_filename() { return filename; }      \
+Symbol get_name_symbol() { return name; }        \
+Symbol get_parent_name_symbol() { return parent; }\
+void dump_with_types(ostream&,int);
 
 
 #define Feature_EXTRAS                                        \
-virtual void dump_with_types(ostream&,int) = 0; 
+virtual void dump_with_types(ostream&,int) = 0;
 
 
 #define Feature_SHARED_EXTRAS                                       \
-void dump_with_types(ostream&,int);    
+void dump_with_types(ostream&,int);
 
 
 
@@ -100,6 +104,6 @@ void dump_type(ostream&, int);               \
 Expression_class() { type = (Symbol) NULL; }
 
 #define Expression_SHARED_EXTRAS           \
-void dump_with_types(ostream&,int); 
+void dump_with_types(ostream&,int);
 
 #endif

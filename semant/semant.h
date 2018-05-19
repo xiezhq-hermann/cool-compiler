@@ -2,7 +2,7 @@
 #define SEMANT_H_
 
 #include <assert.h>
-#include <iostream>  
+#include <iostream>
 #include "cool-tree.h"
 #include "stringtab.h"
 #include "symtab.h"
@@ -20,18 +20,29 @@ typedef ClassTable *ClassTableP;
 // methods.
 
 class ClassTable {
-private:
-  int semant_errors;
-  void install_basic_classes();
-  ostream& error_stream;
+  private:
+    Classes class_list;
+    SymbolTable<Symbol, Class__class>* class_table;
+    void construct_class_table();
 
-public:
-  ClassTable(Classes);
-  int errors() { return semant_errors; }
-  ostream& semant_error();
-  ostream& semant_error(Class_ c);
-  ostream& semant_error(Symbol filename, tree_node *t);
+  private:
+    int semant_errors;
+    void install_basic_classes();
+    ostream& error_stream;
+
+  public:
+    ClassTable(Classes);
+    int errors() { return semant_errors; }
+    ostream& semant_error();
+    ostream& semant_error(Class_ c);
+    ostream& semant_error(Symbol filename, tree_node *t);
+
+  public:
+    void check_inheritance();
+
+  private:
+    bool check_parents();
+    bool check_DAG();
 };
-
 
 #endif
