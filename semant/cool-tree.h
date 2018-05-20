@@ -21,6 +21,7 @@ class Program_class : public tree_node {
 public:
    tree_node *copy()		 { return copy_Program(); }
    virtual Program copy_Program() = 0;
+   virtual void check() = 0;
 
 #ifdef Program_EXTRAS
    Program_EXTRAS
@@ -35,6 +36,7 @@ class Class__class : public tree_node {
 public:
    tree_node *copy()		 { return copy_Class_(); }
    virtual Class_ copy_Class_() = 0;
+   virtual void check() = 0;
 
 #ifdef Class__EXTRAS
    Class__EXTRAS
@@ -49,6 +51,7 @@ class Feature_class : public tree_node {
 public:
    tree_node *copy()		 { return copy_Feature(); }
    virtual Feature copy_Feature() = 0;
+   virtual void check() = 0;
 
 #ifdef Feature_EXTRAS
    Feature_EXTRAS
@@ -63,6 +66,7 @@ class Formal_class : public tree_node {
 public:
    tree_node *copy()		 { return copy_Formal(); }
    virtual Formal copy_Formal() = 0;
+   virtual void check() = 0;
 
 #ifdef Formal_EXTRAS
    Formal_EXTRAS
@@ -77,6 +81,9 @@ class Expression_class : public tree_node {
 public:
    tree_node *copy()		 { return copy_Expression(); }
    virtual Expression copy_Expression() = 0;
+   virtual void check() = 0;
+   bool validate_arithmetic_expr(Expression, Expression);
+   bool validate_comparison_expr(Expression, Expression);
 
 #ifdef Expression_EXTRAS
    Expression_EXTRAS
@@ -91,6 +98,7 @@ class Case_class : public tree_node {
 public:
    tree_node *copy()		 { return copy_Case(); }
    virtual Case copy_Case() = 0;
+   virtual void check() = 0;
 
 #ifdef Case_EXTRAS
    Case_EXTRAS
@@ -133,6 +141,7 @@ public:
    program_class(Classes a1) {
       classes = a1;
    }
+   void check();
    Program copy_Program();
    void dump(ostream& stream, int n);
 
@@ -159,6 +168,7 @@ public:
       features = a3;
       filename = a4;
    }
+   void check();
    Class_ copy_Class_();
    void dump(ostream& stream, int n);
 
@@ -185,6 +195,7 @@ public:
       return_type = a3;
       expr = a4;
    }
+   void check();
    Feature copy_Feature();
    void dump(ostream& stream, int n);
 
@@ -209,6 +220,7 @@ public:
       type_decl = a2;
       init = a3;
    }
+   void check();
    Feature copy_Feature();
    void dump(ostream& stream, int n);
 
@@ -231,6 +243,7 @@ public:
       name = a1;
       type_decl = a2;
    }
+   void check();
    Formal copy_Formal();
    void dump(ostream& stream, int n);
 
@@ -255,6 +268,7 @@ public:
       type_decl = a2;
       expr = a3;
    }
+   void check();
    Case copy_Case();
    void dump(ostream& stream, int n);
 
@@ -277,6 +291,7 @@ public:
       name = a1;
       expr = a2;
    }
+   void check();
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
@@ -303,6 +318,7 @@ public:
       name = a3;
       actual = a4;
    }
+   void check();
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
@@ -327,6 +343,7 @@ public:
       name = a2;
       actual = a3;
    }
+   void check();
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
@@ -351,6 +368,7 @@ public:
       then_exp = a2;
       else_exp = a3;
    }
+   void check();
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
@@ -373,6 +391,7 @@ public:
       pred = a1;
       body = a2;
    }
+   void check();
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
@@ -395,6 +414,7 @@ public:
       expr = a1;
       cases = a2;
    }
+   void check();
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
@@ -415,6 +435,7 @@ public:
    block_class(Expressions a1) {
       body = a1;
    }
+   void check();
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
@@ -441,6 +462,7 @@ public:
       init = a3;
       body = a4;
    }
+   void check();
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
@@ -463,6 +485,7 @@ public:
       e1 = a1;
       e2 = a2;
    }
+   void check();
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
@@ -485,6 +508,7 @@ public:
       e1 = a1;
       e2 = a2;
    }
+   void check();
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
@@ -507,6 +531,7 @@ public:
       e1 = a1;
       e2 = a2;
    }
+   void check();
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
@@ -529,6 +554,7 @@ public:
       e1 = a1;
       e2 = a2;
    }
+   void check();
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
@@ -549,6 +575,7 @@ public:
    neg_class(Expression a1) {
       e1 = a1;
    }
+   void check();
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
@@ -571,6 +598,7 @@ public:
       e1 = a1;
       e2 = a2;
    }
+   void check();
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
@@ -593,6 +621,7 @@ public:
       e1 = a1;
       e2 = a2;
    }
+   void check();
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
@@ -615,6 +644,7 @@ public:
       e1 = a1;
       e2 = a2;
    }
+   void check();
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
@@ -635,6 +665,7 @@ public:
    comp_class(Expression a1) {
       e1 = a1;
    }
+   void check();
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
@@ -655,6 +686,7 @@ public:
    int_const_class(Symbol a1) {
       token = a1;
    }
+   void check();
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
@@ -675,6 +707,7 @@ public:
    bool_const_class(Boolean a1) {
       val = a1;
    }
+   void check();
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
@@ -695,6 +728,7 @@ public:
    string_const_class(Symbol a1) {
       token = a1;
    }
+   void check();
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
@@ -715,6 +749,7 @@ public:
    new__class(Symbol a1) {
       type_name = a1;
    }
+   void check();
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
@@ -735,6 +770,7 @@ public:
    isvoid_class(Expression a1) {
       e1 = a1;
    }
+   void check();
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
@@ -753,6 +789,7 @@ protected:
 public:
    no_expr_class() {
    }
+   void check();
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 
@@ -773,6 +810,7 @@ public:
    object_class(Symbol a1) {
       name = a1;
    }
+   void check();
    Expression copy_Expression();
    void dump(ostream& stream, int n);
 

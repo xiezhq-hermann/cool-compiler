@@ -22,7 +22,7 @@ typedef ClassTable *ClassTableP;
 class ClassTable {
   private:
     Classes class_list;
-    SymbolTable<Symbol, Class__class>* class_table;
+
     void construct_class_table();
 
   private:
@@ -33,6 +33,7 @@ class ClassTable {
   public:
     ClassTable(Classes);
     int errors() { return semant_errors; }
+    SymbolTable<Symbol, Class__class>* class_table;
     ostream& semant_error();
     ostream& semant_error(Class_ c);
     ostream& semant_error(Symbol filename, tree_node *t);

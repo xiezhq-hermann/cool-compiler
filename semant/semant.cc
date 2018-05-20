@@ -81,7 +81,9 @@ static void initialize_constants(void)
     val         = idtable.add_string("_val");
 }
 
-
+Class_ curr_class;
+ClassTable* classtable;
+SymbolTable<char*, Entry>* symboltable;
 
 ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr)
 {
@@ -399,8 +401,654 @@ ostream& ClassTable::semant_error()
     return error_stream;
 }
 
+/////////////////////////////////////////////////////////////////////////////////////
+///////////// Auxiliary things
+
+class InheritanceGraph {
+public:
+    std::map<Symbol, Symbol> graph;
+    int conform(const Symbol&, const Symbol&);
+    void addEdge(const Symbol&, const Symbol&);
+    Symbol lca(Symbol, Symbol);
+} * g;
+
+void InheritanceGraph::addEdge(const Symbol& a, const Symbol& b)
+{
+    if (graph.count(a) != 0) {
+        //throw 1;
+        return;
+    }
+    graph[a] = b;
+}
+
+int InheritanceGraph::conform(const Symbol& a, const Symbol& b)
+{
+    if (a == b)
+        return 1;
+    Symbol cur = a;
+    if (cur == SELF_TYPE)
+        cur = curr_class->get_name_symbol();
+    while (cur != Object) {
+        if (cur == b) {
+            return 1;
+        }
+        cur = graph[cur];
+    }
+    return cur == b;
+}
+Symbol InheritanceGraph::lca(Symbol a, Symbol b)
+{
+    if (a == b)
+        return a;
+
+    if (a == SELF_TYPE)
+        a = curr_class->get_name_symbol();
+
+    if (b == SELF_TYPE)
+        b = curr_class->get_name_symbol();
+
+    int ha = 0, hb = 0;
+    Symbol cura = a, curb = b;
+
+    while (cura != Object) {
+        cura = graph[cura];
+        ha++;
+    }
+    while (curb != Object) {
+        curb = graph[curb];
+        hb++;
+    }
+
+    cura = a;
+    curb = b;
+    if (ha >= hb) {
+        for (int i = ha - hb; i > 0; i--) {
+            cura = graph[cura];
+        }
+    }
+    else {
+        for (int i = hb - ha; i > 0; i--) {
+            curb = graph[curb];
+        }
+    }
+
+    while (cura != curb) {
+        cura = graph[cura];
+        curb = graph[curb];
+    }
+    return cura;
+}
 
 
+Feature class__class::get_attr(char* feature_name){
+    Feature f;
+    for (int i = features->first(); features->more(i); i = features->next(i)) {
+        f = features->nth(i);
+        if (f->get_formals() == NULL && strcmp(const_cast<char*>(f->get_name_symbol()->get_string()), feature_name) == 0) {
+            return f;
+        }
+    }
+    return NULL;
+}
+
+Feature class__class::get_method(char* feature_name){
+    Feature f;
+    for (int i = features->first(); features->more(i); i = features->next(i)) {
+        f = features->nth(i);
+        if (f->get_formals() != NULL && strcmp(const_cast<char*>(f->get_name_symbol()->get_string()), feature_name) == 0) {
+            return f;
+        }
+    }
+    return NULL;
+}
+
+bool Expression_class::validate_arithmetic_expr(Expression e1, Expression e2 = NULL)
+{
+    e1->check();
+    if (e2) {
+        e2->check();
+    }
+    if (e1->get_type() == Int && (e2 == NULL || e2->get_type() == Int)) {
+        type = Int;
+        return true;
+    }
+    else {
+        type = Object;
+        return false;
+    }
+}
+
+bool Expression_class::validate_comparison_expr(Expression e1, Expression e2 = NULL)
+{
+    e1->check();
+    if (e2) {
+        e2->check();
+
+        if (e1->get_type() == Int && e2->get_type() == Int) {
+            type = Bool;
+            return true;
+        }
+        else {
+            type = Object;
+            return false;
+        }
+    }
+    else {
+        if (e1->get_type() == Bool) {
+            type = Bool;
+            return true;
+        }
+        else {
+            type = Object;
+            return false;
+        }
+    }
+}
+
+Symbol branch_class::get_expr_type()
+{
+    return expr->get_type();
+}
+///////////////////////////////////////////////////////////////////////////////////
+////////////////////////// semantic check implementation for different classes
+
+void program_class::check(){
+    for(int i = classes->first(); classes->more(i); i = classes->next(i)){
+        curr_class = classes->nth(i);
+        symboltable->enterscope();
+        curr_class->check();
+        symboltable->exitscope();
+    }
+}
+
+void class__class::check(){
+    Feature f;
+    for(int i = features->first(); features->more(i); i = features->next(i)){
+        f = features->nth(i);
+        f->check();
+    }
+}
+
+void method_class::check()
+{
+    symboltable->enterscope();
+
+    if (classtable->class_table->lookup(return_type) == NULL && return_type != SELF_TYPE) {
+        throw "Undefined return type";
+    }
+
+    Feature feature = NULL;
+    Class_ target_class = classtable->class_table->lookup(curr_class->get_parent_name_symbol());
+
+    while (true) {
+        feature = target_class->get_method(const_cast<char*>(name->get_string()));
+        if (feature != NULL) {
+            break;
+        }
+        Symbol parent = target_class->get_parent_name_symbol();
+        if (parent == No_class)
+            break;
+        target_class = classtable->class_table->lookup(parent);
+    }
+    if (feature != NULL) {
+        Formals parent_formals = feature->get_formals();
+        if (parent_formals->len() != formals->len()) {
+            throw "Invalid overriding!";
+        }
+        for (int i = formals->first(); formals->more(i); i = formals->next(i)) {
+            Formal f = formals->nth(i);
+            f->check();
+            Formal parent_f = parent_formals->nth(i);
+            if (f->get_formal_type() != parent_f->get_formal_type()) {
+                throw "Invalid overriding!";
+            }
+        }
+        if (feature->get_type() != return_type) {
+            throw "Invalid overriding!";
+        }
+    }
+    else {
+        for (int i = formals->first(); formals->more(i); i = formals->next(i)) {
+            Formal f = formals->nth(i);
+            f->check();
+        }
+    }
+
+    expr->check();
+
+    if (g->conform(expr->get_type(), return_type) == false) {
+        throw "expr type cannot conform to return type.";
+    }
+
+    symboltable->exitscope();
+}
+
+void attr_class::check()
+{
+    if (type_decl == SELF_TYPE) {
+        type_decl = curr_class->get_name_symbol();
+    }
+
+    if (strcmp(const_cast<char*>(name->get_string()), "self") == 0) {
+        throw "the self is preserved";
+    }
+
+    Feature feature = NULL;
+    Class_ target_class = classtable->class_table->lookup(curr_class->get_parent_name_symbol());
+
+    while (true) {
+        feature = target_class->get_attr(const_cast<char*>(name->get_string()));
+        if (feature != NULL) {
+            throw "override occur";
+            break;
+        }
+        Symbol parent = target_class->get_parent_name_symbol();
+        if (parent == No_class)
+            break;
+        target_class = classtable->class_table->lookup(parent);
+    }
+
+    init->check();
+
+    Symbol init_type = init->get_type();
+    if (init_type != No_type && g->conform(init_type, type_decl) == false) {
+        throw "type error in attr_class";
+    }
+    symboltable->addid(const_cast<char*>(name->get_string()), type_decl);
+}
+
+void formal_class::check(){
+    if (symboltable->probe(const_cast<char*>(name->get_string())) != NULL) {
+        throw "Duplicated name";
+    }
+    if (name == self) {
+        throw "self is preserved";
+    }
+    if (type_decl == SELF_TYPE) {
+        throw "self_type is also preserved in rule";
+    }
+    symboltable->addid(const_cast<char*>(name->get_string()), type_decl);
+}
+
+void branch_class::check(){
+    symboltable->addid(const_cast<char*>(name->get_string()), type_decl);
+    expr->check();
+    Symbol expr_type = expr->get_type();
+}
+
+void assign_class::check()
+{
+    expr->check();
+    Symbol exprtype = expr->get_type();
+    Symbol mytype = symboltable->lookup(const_cast<char*>(name->get_string()));
+
+    if (mytype == NULL) {
+        Class_ now_c = curr_class;
+        while (true) {
+
+            Feature attr = now_c->get_attr(const_cast<char*>(name->get_string()));
+
+            if (attr != NULL) {
+                mytype = attr->get_type();
+                break;
+            }
+
+            Symbol parent = now_c->get_parent_name_symbol();
+            if (parent == No_class)
+                break;
+            now_c = classtable->class_table->lookup(parent);
+        }
+    }
+    if (mytype == NULL) {
+        throw "type error in object_class";
+    }
+
+    if (g->conform(exprtype, mytype) == false) {
+        throw "type error in assign_class";
+    }
+    type = exprtype;
+}
+
+void static_dispatch_class::check()
+{
+    expr->check();
+
+    Symbol expr_type = expr->get_type();
+
+    if (g->conform(expr_type, type_name) == false) {
+        throw "type error in static_dispatch_class";
+    }
+
+    Feature feature = NULL;
+    Class_ target_class = classtable->class_table->lookup(type_name);
+    while (true) {
+        feature = target_class->get_method(const_cast<char*>(name->get_string()));
+        if (feature != NULL) {
+            break;
+        }
+        Symbol parent = target_class->get_parent_name_symbol();
+        if (parent == No_class)
+            break;
+        target_class = classtable->class_table->lookup(parent);
+    }
+
+    if (feature == NULL) {
+        throw "type error in dispatch_class";
+    }
+
+    Formals formals_type = feature->get_formals();
+    Symbol fun_type = feature->get_type();
+
+    if (fun_type == SELF_TYPE)
+        fun_type = expr->get_type();
+
+    for (int i = actual->first(); actual->more(i); i = actual->next(i)) {
+        Expression act = actual->nth(i);
+        act->check();
+        Symbol nth_formal_type = formals_type->nth(i)->get_formal_type();
+
+        if (g->conform(act->get_type(), nth_formal_type) == false) {
+            throw "type error in dispatch_class";
+        }
+    }
+
+    type = fun_type;
+}
+
+void dispatch_class::check()
+{
+    expr->check();
+
+    Symbol expr_type = expr->get_type();
+
+    if (expr_type == SELF_TYPE)
+        expr_type = curr_class->get_name_symbol();
+
+    Feature feature = NULL;
+    Class_ target_class = classtable->class_table->lookup(expr_type);
+    while (true) {
+        feature = target_class->get_method(const_cast<char*>(name->get_string()));
+        if (feature != NULL) {
+            break;
+        }
+        Symbol parent = target_class->get_parent_name_symbol();
+        if (parent == No_class)
+            break;
+        target_class = classtable->class_table->lookup(parent);
+    }
+
+    if (feature == NULL) {
+        throw "type error in dispatch_class";
+    }
+
+    Formals formals_type = feature->get_formals();
+    Symbol fun_type = feature->get_type();
+
+    if (fun_type == SELF_TYPE)
+        fun_type = expr->get_type();
+
+    for (int i = actual->first(); actual->more(i); i = actual->next(i)) {
+        Expression act = actual->nth(i);
+        act->check();
+        Symbol nth_formal_type = formals_type->nth(i)->get_formal_type();
+        if (g->conform(act->get_type(), nth_formal_type) == false) {
+            throw "type error in dispatch_class";
+        }
+    }
+
+    type = fun_type;
+}
+
+void cond_class::check()
+{
+    pred->check();
+
+    if (pred->get_type() != Bool) {
+        throw "type error in cond_class";
+    }
+    then_exp->check();
+    else_exp->check();
+
+    Symbol join_type = g->lca(then_exp->get_type(), else_exp->get_type());
+    type = join_type;
+}
+
+void loop_class::check()
+{
+    pred->check();
+    if (pred->get_type() != Bool) {
+        throw "type error in lt_class";
+    }
+    body->check();
+    type = Object;
+}
+
+void typcase_class::check()
+{
+    expr->check();
+    Symbol expr_type = expr->get_type();
+    Symbol join_type = NULL;
+
+    SymbolTable<char*, Entry>* casetable = new SymbolTable<char*, Entry>();
+    casetable->enterscope();
+
+    for (int i = cases->first(); cases->more(i); i = cases->next(i)) {
+        symboltable->enterscope();
+        Case c = cases->nth(i);
+
+        if (casetable->lookup(const_cast<char*>(c->get_decl_type()->get_string())) != NULL) {
+            throw "Duplicate branch Int in case statement.";
+        }
+        casetable->addid(const_cast<char*>(c->get_decl_type()->get_string()), c->get_decl_type());
+
+        c->check();
+
+        if (g->conform(c->get_expr_type(), c->get_decl_type()) == false) {
+            throw "type error in typcase_class";
+        }
+        if (join_type == NULL)
+            join_type = c->get_expr_type();
+        else
+            join_type = g->lca(join_type, c->get_expr_type());
+
+        symboltable->exitscope();
+    }
+    type = join_type;
+}
+
+void block_class::check()
+{
+    Expression last = NULL;
+    for (int i = body->first(); body->more(i); i = body->next(i)) {
+        Expression e = body->nth(i);
+        e->check();
+        last = e;
+    }
+    if (last != NULL) {
+        type = last->get_type();
+    }
+}
+
+void let_class::check()
+{
+    if (identifier == self) {
+        throw "type error in let_class";
+    }
+    init->check();
+    symboltable->enterscope();
+
+    Symbol init_type = init->get_type();
+
+    if (init_type != No_type && g->conform(init_type, type_decl) == false) {
+        throw "type error in let_class";
+    }
+    symboltable->addid(const_cast<char*>(identifier->get_string()), type_decl);
+    body->check();
+    type = body->get_type();
+    symboltable->exitscope();
+}
+
+void plus_class::check()
+{
+    if (!validate_arithmetic_expr(e1, e2)) {
+        throw "type error in plus_class";
+    }
+}
+
+void sub_class::check()
+{
+    if (!validate_arithmetic_expr(e1, e2)) {
+        throw "type error in sub_class";
+    }
+}
+
+void mul_class::check()
+{
+    if (!validate_arithmetic_expr(e1, e2)) {
+        throw "type error in mul_class";
+    }
+}
+
+void divide_class::check()
+{
+    if (!validate_arithmetic_expr(e1, e2)) {
+        throw "type error in divide_class";
+    }
+}
+
+void neg_class::check()
+{
+    if (!validate_arithmetic_expr(e1)) {
+        throw "type error in neg_class";
+    }
+}
+
+void lt_class::check()
+{
+    if (!validate_comparison_expr(e1, e2)) {
+        throw "type error in lt_class";
+    }
+}
+
+void eq_class::check()
+{
+    e1->check();
+    e2->check();
+
+    if (e1->get_type() == Int) {
+        if (e2->get_type() == Int)
+            type = Bool;
+        else {
+            type = Object;
+            throw "type error in eq_class";
+        }
+    }
+    if (e1->get_type() == Str) {
+        if (e2->get_type() == Str)
+            type = Bool;
+        else {
+            type = Object;
+            throw "type error in eq_class";
+        }
+    }
+    if (e1->get_type() == Bool) {
+        if (e2->get_type() == Bool)
+            type = Bool;
+        else {
+            type = Object;
+            throw "type error in eq_class";
+        }
+    }
+    type = Bool;
+}
+
+void leq_class::check()
+{
+    if (!validate_comparison_expr(e1, e2)) {
+        throw "type error in leq_class";
+    }
+}
+
+void comp_class::check()
+{
+    if (!validate_comparison_expr(e1)) {
+        throw "type error in comp_class";
+    }
+}
+
+void int_const_class::check()
+{
+    type = Int;
+}
+
+void bool_const_class::check()
+{
+    type = Bool;
+}
+
+void string_const_class::check()
+{
+    type = Str;
+}
+
+void new__class::check()
+{
+    Symbol new_type;
+
+    if (type_name == SELF_TYPE) {
+        new_type = curr_class->get_name_symbol();
+    }
+    else {
+        new_type = type_name;
+    }
+
+    type = type_name;
+}
+
+void isvoid_class::check()
+{
+    e1->check();
+    type = Bool;
+}
+
+void no_expr_class::check()
+{
+    type = No_type;
+}
+
+void object_class::check()
+{
+    if (name == self) {
+        type = SELF_TYPE;
+        return;
+    }
+    // 1. find object in symboltable
+    // 2. find object in attr_node till Object
+
+    Symbol mytype = symboltable->lookup(const_cast<char*>(name->get_string()));
+
+    if (mytype == NULL) {
+        Class_ now_c = curr_class;
+        while (true) {
+
+            Feature attr = now_c->get_attr(const_cast<char*>(name->get_string()));
+
+            if (attr != NULL) {
+                mytype = attr->get_type();
+                break;
+            }
+
+            Symbol parent = now_c->get_parent_name_symbol();
+            if (parent == No_class)
+                break;
+            now_c = classtable->class_table->lookup(parent);
+        }
+    }
+    if (mytype == NULL) {
+        throw "type error in object_class";
+    }
+    type = mytype;
+}
 /*   This is the entry point to the semantic checker.
      Your checker should do the following two things:
      1) Check that the program is semantically correct
@@ -416,7 +1064,7 @@ void program_class::semant()
     // Phase I: Check class definitions
     initialize_constants();
 
-    ClassTable *classtable = new ClassTable(classes);
+    classtable = new ClassTable(classes);
 
     if (classtable->errors())
     {
@@ -425,5 +1073,27 @@ void program_class::semant()
     }
 
     // Phase II: Check the rest
-
+    symboltable = new SymbolTable<char*, Entry>();
+    g = new InheritanceGraph();
+    g->addEdge(IO, Object);
+    g->addEdge(Int, Object);
+    g->addEdge(Bool, Object);
+    g->addEdge(Str, Object);
+    for (int i = classes->first(); classes->more(i); i = classes->next(i)) {
+        curr_class = classes->nth(i);
+        Symbol a = curr_class->get_name_symbol();
+        Symbol b = curr_class->get_parent_name_symbol();
+        g->addEdge(a, b);
+    }
+    try {
+        check();
+    }
+    catch (const char* msg) {
+        classtable->semant_error(curr_class) << msg << endl;
+    }
+    if (classtable->errors())
+    {
+        cerr << "Compilation halted due to static semantic errors." << endl;
+        exit(1);
+    }
 }
