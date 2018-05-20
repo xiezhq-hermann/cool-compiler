@@ -404,39 +404,31 @@ ostream& ClassTable::semant_error()
 /////////////////////////////////////////////////////////////////////////////////////
 ///////////// Auxiliary things
 
-class InheritanceGraph {
+class inheritance_graph {
 public:
     std::map<Symbol, Symbol> graph;
-    int conform(const Symbol&, const Symbol&);
-    void addEdge(const Symbol&, const Symbol&);
+    bool conform(const Symbol&, const Symbol&);
     Symbol lca(Symbol, Symbol);
+    // lowest common ancestor
 } * g;
 
-void InheritanceGraph::addEdge(const Symbol& a, const Symbol& b)
+bool inheritance_graph::conform(const Symbol& a, const Symbol& b)
 {
-    if (graph.count(a) != 0) {
-        //throw 1;
-        return;
-    }
-    graph[a] = b;
-}
-
-int InheritanceGraph::conform(const Symbol& a, const Symbol& b)
-{
-    if (a == b)
-        return 1;
     Symbol cur = a;
+    if (a == b)
+        return true;
     if (cur == SELF_TYPE)
         cur = curr_class->get_name_symbol();
     while (cur != Object) {
         if (cur == b) {
-            return 1;
+            return true;
         }
         cur = graph[cur];
     }
     return cur == b;
 }
-Symbol InheritanceGraph::lca(Symbol a, Symbol b)
+
+Symbol inheritance_graph::lca(Symbol a, Symbol b)
 {
     if (a == b)
         return a;
@@ -447,36 +439,39 @@ Symbol InheritanceGraph::lca(Symbol a, Symbol b)
     if (b == SELF_TYPE)
         b = curr_class->get_name_symbol();
 
-    int ha = 0, hb = 0;
-    Symbol cura = a, curb = b;
+    int hight_a = 0;
+    int hight_b = 0;
+    Symbol tem_a = a;
+    Symbol tem_b = b;
 
-    while (cura != Object) {
-        cura = graph[cura];
-        ha++;
+    while (tem_a != Object) {
+        tem_a = graph[tem_a];
+        hight_a++;
     }
-    while (curb != Object) {
-        curb = graph[curb];
-        hb++;
+    while (tem_b != Object) {
+        tem_b = graph[tem_b];
+        hight_b++;
     }
 
-    cura = a;
-    curb = b;
-    if (ha >= hb) {
-        for (int i = ha - hb; i > 0; i--) {
-            cura = graph[cura];
+    tem_a = a;
+    tem_b = b;
+    if (hight_a >= hight_b) {
+        for (int i = hight_a - hight_b; i > 0; i--) {
+            tem_a = graph[tem_a];
         }
     }
     else {
-        for (int i = hb - ha; i > 0; i--) {
-            curb = graph[curb];
+        for (int i = hight_b - hight_a; i > 0; i--) {
+            tem_b = graph[tem_b];
         }
     }
 
-    while (cura != curb) {
-        cura = graph[cura];
-        curb = graph[curb];
+    while (tem_a != tem_b) {
+        tem_a = graph[tem_a];
+        tem_b = graph[tem_b];
     }
-    return cura;
+
+    return tem_a;
 }
 
 
@@ -502,12 +497,13 @@ Feature class__class::get_method(char* feature_name){
     return NULL;
 }
 
-bool Expression_class::validate_arithmetic_expr(Expression e1, Expression e2 = NULL)
+bool Expression_class::check_arith(Expression e1, Expression e2 = NULL)
 {
     e1->check();
     if (e2) {
         e2->check();
     }
+
     if (e1->get_type() == Int && (e2 == NULL || e2->get_type() == Int)) {
         type = Int;
         return true;
@@ -518,7 +514,7 @@ bool Expression_class::validate_arithmetic_expr(Expression e1, Expression e2 = N
     }
 }
 
-bool Expression_class::validate_comparison_expr(Expression e1, Expression e2 = NULL)
+bool Expression_class::check_comp(Expression e1, Expression e2 = NULL)
 {
     e1->check();
     if (e2) {
@@ -534,6 +530,7 @@ bool Expression_class::validate_comparison_expr(Expression e1, Expression e2 = N
         }
     }
     else {
+
         if (e1->get_type() == Bool) {
             type = Bool;
             return true;
@@ -551,6 +548,8 @@ Symbol branch_class::get_expr_type()
 }
 ///////////////////////////////////////////////////////////////////////////////////
 ////////////////////////// semantic check implementation for different classes
+// As for this type checking part, refer this work a lot
+// https://github.com/luyi0619/cool-compiler
 
 void program_class::check(){
     for(int i = classes->first(); classes->more(i); i = classes->next(i)){
@@ -571,40 +570,49 @@ void class__class::check(){
 
 void method_class::check()
 {
+    Feature feature;
+    Class_ target_class;
+    Symbol paren;
+    Formals parent_formals;
+
     symboltable->enterscope();
 
     if (classtable->class_table->lookup(return_type) == NULL && return_type != SELF_TYPE) {
-        throw "Undefined return type";
+        throw "Unknown return type";
     }
 
-    Feature feature = NULL;
-    Class_ target_class = classtable->class_table->lookup(curr_class->get_parent_name_symbol());
+    feature = NULL;
+    target_class = classtable->class_table->lookup(curr_class->get_parent_name_symbol());
 
     while (true) {
+        // iterate to search the valid feature line
         feature = target_class->get_method(const_cast<char*>(name->get_string()));
         if (feature != NULL) {
             break;
         }
-        Symbol parent = target_class->get_parent_name_symbol();
+        parent = target_class->get_parent_name_symbol();
         if (parent == No_class)
             break;
         target_class = classtable->class_table->lookup(parent);
     }
+
     if (feature != NULL) {
-        Formals parent_formals = feature->get_formals();
+        parent_formals = feature->get_formals();
         if (parent_formals->len() != formals->len()) {
-            throw "Invalid overriding!";
+            throw "invalid formals";
         }
+
         for (int i = formals->first(); formals->more(i); i = formals->next(i)) {
             Formal f = formals->nth(i);
             f->check();
             Formal parent_f = parent_formals->nth(i);
             if (f->get_formal_type() != parent_f->get_formal_type()) {
-                throw "Invalid overriding!";
+                throw "formal type mismatch";
             }
         }
+
         if (feature->get_type() != return_type) {
-            throw "Invalid overriding!";
+            throw "formal type mismatch";
         }
     }
     else {
@@ -617,7 +625,7 @@ void method_class::check()
     expr->check();
 
     if (g->conform(expr->get_type(), return_type) == false) {
-        throw "expr type cannot conform to return type.";
+        throw "types don't conform";
     }
 
     symboltable->exitscope();
@@ -625,6 +633,10 @@ void method_class::check()
 
 void attr_class::check()
 {
+    Feature feature;
+    Class_ target_class;
+    Symbol paren;
+
     if (type_decl == SELF_TYPE) {
         type_decl = curr_class->get_name_symbol();
     }
@@ -633,8 +645,8 @@ void attr_class::check()
         throw "the self is preserved";
     }
 
-    Feature feature = NULL;
-    Class_ target_class = classtable->class_table->lookup(curr_class->get_parent_name_symbol());
+    feature = NULL;
+    target_class = classtable->class_table->lookup(curr_class->get_parent_name_symbol());
 
     while (true) {
         feature = target_class->get_attr(const_cast<char*>(name->get_string()));
@@ -642,7 +654,7 @@ void attr_class::check()
             throw "override occur";
             break;
         }
-        Symbol parent = target_class->get_parent_name_symbol();
+        parent = target_class->get_parent_name_symbol();
         if (parent == No_class)
             break;
         target_class = classtable->class_table->lookup(parent);
@@ -890,42 +902,42 @@ void let_class::check()
 
 void plus_class::check()
 {
-    if (!validate_arithmetic_expr(e1, e2)) {
+    if (!check_arith(e1, e2)) {
         throw "type error in plus_class";
     }
 }
 
 void sub_class::check()
 {
-    if (!validate_arithmetic_expr(e1, e2)) {
+    if (!check_arith(e1, e2)) {
         throw "type error in sub_class";
     }
 }
 
 void mul_class::check()
 {
-    if (!validate_arithmetic_expr(e1, e2)) {
+    if (!check_arith(e1, e2)) {
         throw "type error in mul_class";
     }
 }
 
 void divide_class::check()
 {
-    if (!validate_arithmetic_expr(e1, e2)) {
+    if (!check_arith(e1, e2)) {
         throw "type error in divide_class";
     }
 }
 
 void neg_class::check()
 {
-    if (!validate_arithmetic_expr(e1)) {
+    if (!check_arith(e1)) {
         throw "type error in neg_class";
     }
 }
 
 void lt_class::check()
 {
-    if (!validate_comparison_expr(e1, e2)) {
+    if (!check_comp(e1, e2)) {
         throw "type error in lt_class";
     }
 }
@@ -964,14 +976,14 @@ void eq_class::check()
 
 void leq_class::check()
 {
-    if (!validate_comparison_expr(e1, e2)) {
+    if (!check_comp(e1, e2)) {
         throw "type error in leq_class";
     }
 }
 
 void comp_class::check()
 {
-    if (!validate_comparison_expr(e1)) {
+    if (!check_comp(e1)) {
         throw "type error in comp_class";
     }
 }
@@ -1074,17 +1086,21 @@ void program_class::semant()
 
     // Phase II: Check the rest
     symboltable = new SymbolTable<char*, Entry>();
-    g = new InheritanceGraph();
-    g->addEdge(IO, Object);
-    g->addEdge(Int, Object);
-    g->addEdge(Bool, Object);
-    g->addEdge(Str, Object);
+
+    // build the inheritance graph quickly again
+    g = new inheritance_graph();
+    g->graph[IO] = Object;
+    g->graph[Int] = Object;
+    g->graph[Bool] = Object;
+    g->graph[Str] = Object;
     for (int i = classes->first(); classes->more(i); i = classes->next(i)) {
         curr_class = classes->nth(i);
         Symbol a = curr_class->get_name_symbol();
         Symbol b = curr_class->get_parent_name_symbol();
-        g->addEdge(a, b);
+        g->graph[a] = b;
     }
+
+    // adapt the simpler error-handling machanism
     try {
         check();
     }

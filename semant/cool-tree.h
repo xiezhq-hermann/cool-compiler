@@ -82,8 +82,8 @@ public:
    tree_node *copy()		 { return copy_Expression(); }
    virtual Expression copy_Expression() = 0;
    virtual void check() = 0;
-   bool validate_arithmetic_expr(Expression, Expression);
-   bool validate_comparison_expr(Expression, Expression);
+   bool check_arith(Expression, Expression);
+   bool check_comp(Expression, Expression);
 
 #ifdef Expression_EXTRAS
    Expression_EXTRAS
