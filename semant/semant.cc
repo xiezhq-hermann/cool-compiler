@@ -548,7 +548,7 @@ Symbol branch_class::get_expr_type()
 }
 ///////////////////////////////////////////////////////////////////////////////////
 ////////////////////////// semantic check implementation for different classes
-// As for this type checking part, refer this work a lot
+// As for this type checking part, refer this work a lot for type checking
 // https://github.com/luyi0619/cool-compiler
 
 void program_class::check(){
@@ -572,7 +572,7 @@ void method_class::check()
 {
     Feature feature;
     Class_ target_class;
-    Symbol paren;
+    Symbol parent;
     Formals parent_formals;
 
     symboltable->enterscope();
@@ -635,7 +635,7 @@ void attr_class::check()
 {
     Feature feature;
     Class_ target_class;
-    Symbol paren;
+    Symbol parent;
 
     if (type_decl == SELF_TYPE) {
         type_decl = curr_class->get_name_symbol();
