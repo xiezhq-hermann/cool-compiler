@@ -33,6 +33,7 @@
 
 # c++ source files
 */*.cc
-!semant/*.cc
-!cgen/*.cc
+!semant/semant.cc
+!cgen/cgen_supp.cc
+!cgen/cgen.cc
 
