@@ -62,7 +62,7 @@ public:
 //
 class StringEntry : public Entry {
 public:
-  void code_def(ostream& str, int stringclasstag);
+  void code_def(ostream& str);
   void code_ref(ostream& str);
   StringEntry(char *s, int l, int i);
 };

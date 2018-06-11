@@ -12,7 +12,6 @@ FILE *ast_file = stdin;       // we read the AST from standard input
 extern int ast_yyparse(void); // entry point to the AST parser
 
 int cool_yydebug;     // not used, but needed to link with handle_flags
-int curr_lineno;
 char *curr_filename;
 
 void handle_flags(int argc, char *argv[]);

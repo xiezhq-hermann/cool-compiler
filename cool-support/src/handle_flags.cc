@@ -24,7 +24,7 @@
 
 extern int yy_flex_debug;       // for the lexer; prints recognized rules
 extern int cool_yydebug;        // for the parser
-       int VERBOSE_ERRORS;      // for the parser; prints verbose errors
+       int lex_verbose;         // also for the lexer; prints tokens
        int semant_debug;        // for semantic analysis
        int cgen_debug;          // for code gen
        bool disable_reg_alloc;  // Don't do register allocation
@@ -46,7 +46,7 @@ void handle_flags(int argc, char *argv[]) {
   // no debugging or optimization by default
   yy_flex_debug = 0;
   cool_yydebug = 0;
-  VERBOSE_ERRORS = 0;
+  lex_verbose  = 0;
   semant_debug = 0;
   cgen_debug = 0;
   cgen_optimize = 0;
@@ -69,7 +69,7 @@ void handle_flags(int argc, char *argv[]) {
       cgen_debug = 1;
       break;
     case 'v':
-      VERBOSE_ERRORS = 1;
+      lex_verbose = 1;
       break;
     case 'r':
       disable_reg_alloc = 1;
@@ -111,9 +111,9 @@ void handle_flags(int argc, char *argv[]) {
   if (unknownopt) {
       cerr << "usage: " << argv[0] << 
 #ifdef DEBUG
-	  " [-lvpscOgtr -o outname] [input-files]\n";
+	  " [-lvpscOgtTr -o outname] [input-files]\n";
 #else
-      " [-Ogt -o outname] [input-files]\n";
+      " [-OgtT -o outname] [input-files]\n";
 #endif
       exit(1);
   }

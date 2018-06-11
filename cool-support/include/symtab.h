@@ -18,7 +18,7 @@
 
 //
 // SymtabEnty<SYM,DAT> defines the entry for a symbol table that associates
-//    symbols of type `SYM' with data of type `DAT *'.
+//    symbols of type `SYM' with data of type `DAT *'.  
 //
 
 template <class SYM, class DAT>
@@ -37,7 +37,7 @@ public:
 //    type `SYM' to data of type `DAT *'.  It is implemented as a
 //    list of lists of `SymtabEntry<SYM,DAT> *'.  The inner list is
 //    a scope, a mapping from symbols to data, and the outer list is
-//    a list of scopes.
+//    a list of scopes. 
 //
 //    `tbl' points to the current top scope.
 //
@@ -62,7 +62,7 @@ public:
 //        the root scope is reached.  It returns the data item
 //        associated with the entry, or NULL if no such entry exists.
 //
-//
+//    
 //    `probe(s)' checks the top scope for an entry whose `get_id()'
 //        equals `s', and returns the entry's `get_info()' if
 //        found, and NULL otherwise.
@@ -88,7 +88,7 @@ public:
    {
      cerr << msg << "\n";
      exit(1);
-   }
+   } 
 
    // Enter a new scope.  A symbol table is organized as a list of
    // lists.  The head of the list is the innermost scope, the tail
@@ -121,7 +121,7 @@ public:
        tbl = new ScopeList(new Scope(se, tbl->hd()), tbl->tl());
        return(se);
    }
-
+   
    // Lookup an item through all scopes of the symbol table.  If found
    // it returns the associated information field, if not it returns
    // NULL.
@@ -153,7 +153,7 @@ public:
        return(NULL);
    }
 
-   // Prints out the contents of the symbol table
+   // Prints out the contents of the symbol table  
    void dump()
    {
       for(ScopeList *i = tbl; i != NULL; i = i->tl()) {
@@ -163,7 +163,8 @@ public:
          }
       }
    }
-
+ 
 };
 
 #endif
+

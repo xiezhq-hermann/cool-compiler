@@ -17,7 +17,7 @@
 //
 
 template <class Elem>
-Elem *StringTable<Elem>::add_string(const char *s)
+Elem *StringTable<Elem>::add_string(char *s)
 {
  return add_string(s,MAXSIZE);
 }
@@ -29,7 +29,7 @@ Elem *StringTable<Elem>::add_string(const char *s)
 // to the list.
 //
 template <class Elem>
-Elem *StringTable<Elem>::add_string(const char *s, int maxchars)
+Elem *StringTable<Elem>::add_string(char *s, int maxchars)
 {
   int len = min((int) strlen(s),maxchars);
   for(List<Elem> *l = tbl; l; l = l->tl())
@@ -47,7 +47,7 @@ Elem *StringTable<Elem>::add_string(const char *s, int maxchars)
 // is used only for strings that one expects to find in the table.
 //
 template <class Elem>
-Elem *StringTable<Elem>::lookup_string(const char *s)
+Elem *StringTable<Elem>::lookup_string(char *s)
 {
   int len = strlen(s);
   for(List<Elem> *l = tbl; l; l = l->tl())

@@ -15,6 +15,7 @@
 //      print_escaped_string   print a string showing escape characters
 //      print_cool_token       print a cool token and its semantic value
 //      dump_cool_token        dump a readable token representation
+//      strdup                 duplicate a string (missing from some libraries)
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -30,7 +31,7 @@
 // in fact only 79 spaces were there; I've made it 80 now
 //                                1         2         3         4         5         6         7
 //                      01234567890123456789012345678901234567890123456789012345678901234567890123456789
-static const char *padding = "                                                                                ";      // 80 spaces for padding
+static char *padding = "                                                                                ";      // 80 spaces for padding
 
 void fatal_error(char *msg)
 {
@@ -72,7 +73,7 @@ void print_escaped_string(ostream& str, const char *s)
 //
 // The following two functions are used for debugging the parser.
 //
-const char *cool_token_to_string(int tok)
+char *cool_token_to_string(int tok)
 {
   switch (tok) {
   case 0:            return("EOF");        break;
@@ -161,7 +162,8 @@ void print_cool_token(int tok)
 }
 
 // dump the token in format readable by the sceond phase token lexer
-void dump_cool_token(ostream& out, int lineno, int token, YYSTYPE yylval) {
+void dump_cool_token(ostream& out, int lineno, int token, YYSTYPE yylval)
+{
     out << "#" << lineno << " " << cool_token_to_string(token);
 
     switch (token) {
@@ -208,6 +210,20 @@ void dump_cool_token(ostream& out, int lineno, int token, YYSTYPE yylval) {
     out << endl;
 }
 
+//
+// Decstations don't have strdup in the library.
+//
+char *strdup(const char *s)
+{
+  char *news;
+
+  if (s == NULL) return(NULL);
+
+  news = (char *)malloc(strlen(s)+1);
+  strcpy(news, s);
+  return(news);
+}
+
 ///////////////////////////////////////////////////////////////////////////
 //
 // pad
@@ -215,7 +231,7 @@ void dump_cool_token(ostream& out, int lineno, int token, YYSTYPE yylval) {
 // function to add pad
 //
 ///////////////////////////////////////////////////////////////////////////
-const char *pad(int n) {
+char *pad(int n) {
     if (n > 80) return padding;
     if (n <= 0)  return "";
     return padding+(80-n);

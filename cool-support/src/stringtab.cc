@@ -18,13 +18,13 @@ template class StringTable<IdEntry>;
 template class StringTable<StringEntry>;
 template class StringTable<IntEntry>;
 
-Entry::Entry(const char *s, int l, int i) : len(l), index(i) {
+Entry::Entry(char *s, int l, int i) : len(l), index(i) {
   str = new char [len+1];
   strncpy(str, s, len);
   str[len] = '\0';
 }
 
-int Entry::equal_string(const char *string, int length) const
+int Entry::equal_string(char *string, int length) const
 {
   return (len == length) && (strncmp(str,string,len) == 0);
 }
@@ -45,7 +45,7 @@ ostream& operator<<(ostream& s, Symbol sym)
   return s << *sym;
 }
 
-const char *Entry::get_string() const
+char *Entry::get_string() const
 {
   return str;
 }
@@ -70,9 +70,9 @@ void dump_Symbol(ostream& s, int n, Symbol sym)
   s << pad(n) << sym << endl;
 }
 
-StringEntry::StringEntry(const char *s, int l, int i) : Entry(s,l,i) { }
-IdEntry::IdEntry(const char *s, int l, int i) : Entry(s,l,i) { }
-IntEntry::IntEntry(const char *s, int l, int i) : Entry(s,l,i) { }
+StringEntry::StringEntry(char *s, int l, int i) : Entry(s,l,i) { }
+IdEntry::IdEntry(char *s, int l, int i) : Entry(s,l,i) { }
+IntEntry::IntEntry(char *s, int l, int i) : Entry(s,l,i) { }
 
 IdTable idtable;
 IntTable inttable;

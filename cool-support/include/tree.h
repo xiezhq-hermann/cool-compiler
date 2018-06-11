@@ -55,10 +55,10 @@ protected:
 public:
     tree_node();
     virtual tree_node *copy() = 0;
+    virtual ~tree_node() { }
     virtual void dump(ostream& stream, int n) = 0;
     int get_line_number();
     tree_node *set(tree_node *);
-    virtual ~tree_node() {}
 };
 
 ///////////////////////////////////////////////////////////////////
@@ -124,6 +124,7 @@ public:
     int more(int n)  { return (n < len()); }
 
     virtual list_node<Elem> *copy_list() = 0;
+    virtual ~list_node() { }
     virtual int len() = 0;
     virtual Elem nth_length(int n, int &len) = 0;
 
@@ -132,7 +133,7 @@ public:
     static list_node<Elem> *append(list_node<Elem> *l1,list_node<Elem> *l2);
 };
 
-const char *pad(int n);
+char *pad(int n);
 
 extern int info_size;
 
@@ -167,6 +168,7 @@ public:
     }
     list_node<Elem> *copy_list();
     int len();
+    Elem nth(int n);
     Elem nth_length(int n, int &len);
     void dump(ostream& stream, int n);
 };
@@ -193,6 +195,20 @@ template <class Elem> list_node<Elem> *list_node<Elem>::append(list_node<Elem> *
 ///////////////////////////////////////////////////////////////////////////
 
 template <class Elem> Elem list_node<Elem>::nth(int n)
+{
+    int len;
+    Elem tmp = nth_length(n ,len);
+
+    if (tmp)
+	return tmp;
+    else {
+	cerr << "error: outside the range of the list\n";
+	exit(1);
+    }
+}
+
+// added 10/30/06 cgs
+template <class Elem> Elem append_node<Elem>::nth(int n)
 {
     int len;
     Elem tmp = nth_length(n ,len);
@@ -375,7 +391,7 @@ template <class Elem> void append_node<Elem>::dump(ostream& stream, int n)
     size = len();
     stream << pad(n) << "list\n";
     for (i = 0; i < size; i++)
-	this->nth(i)->dump(stream, n+2);
+      nth(i)->dump(stream, n+2);
     stream << pad(n) << "(end_of_list)\n";
 }
 
