@@ -43,7 +43,7 @@ extern int cgen_debug;
 // as fixed names used by the runtime system.
 //
 //////////////////////////////////////////////////////////////////////
-Symbol 
+Symbol
        arg,
        arg2,
        Bool,
@@ -88,7 +88,7 @@ static void initialize_constants(void)
   length      = idtable.add_string("length");
   Main        = idtable.add_string("Main");
   main_meth   = idtable.add_string("main");
-//   _no_class is a symbol that can't be the name of any 
+//   _no_class is a symbol that can't be the name of any
 //   user-defined class.
   No_class    = idtable.add_string("_no_class");
   No_type     = idtable.add_string("_no_type");
@@ -129,7 +129,7 @@ BoolConst truebool(TRUE);
 //
 //*********************************************************
 
-void program_class::cgen(ostream &os) 
+void program_class::cgen(ostream &os)
 {
   // spim wants comments to start with '#'
   os << "# start of generated code\n";
@@ -157,7 +157,7 @@ void program_class::cgen(ostream &os)
 
 static void emit_load(char *dest_reg, int offset, char *source_reg, ostream& s)
 {
-  s << LW << dest_reg << " " << offset * WORD_SIZE << "(" << source_reg << ")" 
+  s << LW << dest_reg << " " << offset * WORD_SIZE << "(" << source_reg << ")"
     << endl;
 }
 
@@ -403,6 +403,7 @@ void StringEntry::code_def(ostream& s, int stringclasstag)
 
 
  /***** Add dispatch information for class String ******/
+      s << "String__dispTab";
 
       s << endl;                                              // dispatch table
       s << WORD;  lensym->code_ref(s);  s << endl;            // string length
@@ -412,11 +413,11 @@ void StringEntry::code_def(ostream& s, int stringclasstag)
 
 //
 // StrTable::code_string
-// Generate a string object definition for every string constant in the 
+// Generate a string object definition for every string constant in the
 // stringtable.
 //
 void StrTable::code_string_table(ostream& s, int stringclasstag)
-{  
+{
   for (List<StringEntry> *l = tbl; l; l = l->tl())
     l->hd()->code_def(s,stringclasstag);
 }
@@ -442,9 +443,10 @@ void IntEntry::code_def(ostream &s, int intclasstag)
   code_ref(s);  s << LABEL                                // label
       << WORD << intclasstag << endl                      // class tag
       << WORD << (DEFAULT_OBJFIELDS + INT_SLOTS) << endl  // object size
-      << WORD; 
+      << WORD;
 
  /***** Add dispatch information for class Int ******/
+      s << "Int_dispTab";
 
       s << endl;                                          // dispatch table
       s << WORD << str << endl;                           // integer value
@@ -472,7 +474,7 @@ void BoolConst::code_ref(ostream& s) const
 {
   s << BOOLCONST_PREFIX << val;
 }
-  
+
 //
 // Emit code for a constant Bool.
 // You should fill in the code naming the dispatch table.
@@ -489,6 +491,7 @@ void BoolConst::code_def(ostream& s, int boolclasstag)
       << WORD;
 
  /***** Add dispatch information for class Bool ******/
+      s << "Bool__dispTab";
 
       s << endl;                                            // dispatch table
       s << WORD << val << endl;                             // value (0 or 1)
@@ -534,10 +537,10 @@ void CgenClassTable::code_global_data()
   //
   str << INTTAG << LABEL
       << WORD << intclasstag << endl;
-  str << BOOLTAG << LABEL 
+  str << BOOLTAG << LABEL
       << WORD << boolclasstag << endl;
-  str << STRINGTAG << LABEL 
-      << WORD << stringclasstag << endl;    
+  str << STRINGTAG << LABEL
+      << WORD << stringclasstag << endl;
 }
 
 
@@ -551,7 +554,7 @@ void CgenClassTable::code_global_data()
 void CgenClassTable::code_global_text()
 {
   str << GLOBAL << HEAP_START << endl
-      << HEAP_START << LABEL 
+      << HEAP_START << LABEL
       << WORD << 0 << endl
       << "\t.text" << endl
       << GLOBAL;
@@ -658,7 +661,7 @@ void CgenClassTable::install_basic_classes()
 	new CgenNode(class_(prim_slot,No_class,nil_Features(),filename),
 			    Basic,this));
 
-// 
+//
 // The Object class has no parent class. Its methods are
 //        cool_abort() : Object    aborts the program
 //        type_name() : Str        returns a string representation of class name
@@ -669,7 +672,7 @@ void CgenClassTable::install_basic_classes()
 //
   install_class(
    new CgenNode(
-    class_(Object, 
+    class_(Object,
 	   No_class,
 	   append_Features(
            append_Features(
@@ -679,7 +682,7 @@ void CgenClassTable::install_basic_classes()
 	   filename),
     Basic,this));
 
-// 
+//
 // The IO class inherits from Object. Its methods are
 //        out_string(Str) : SELF_TYPE          writes a string to the output
 //        out_int(Int) : SELF_TYPE               "    an int    "  "     "
@@ -688,7 +691,7 @@ void CgenClassTable::install_basic_classes()
 //
    install_class(
     new CgenNode(
-     class_(IO, 
+     class_(IO,
             Object,
             append_Features(
             append_Features(
@@ -699,16 +702,16 @@ void CgenClassTable::install_basic_classes()
                         SELF_TYPE, no_expr()))),
             single_Features(method(in_string, nil_Formals(), Str, no_expr()))),
             single_Features(method(in_int, nil_Formals(), Int, no_expr()))),
-	   filename),	    
+	   filename),
     Basic,this));
 
 //
 // The Int class has no methods and only a single attribute, the
-// "val" for the integer. 
+// "val" for the integer.
 //
    install_class(
     new CgenNode(
-     class_(Int, 
+     class_(Int,
 	    Object,
             single_Features(attr(val, prim_slot, no_expr())),
 	    filename),
@@ -729,10 +732,10 @@ void CgenClassTable::install_basic_classes()
 //       length() : Int                       length of the string
 //       concat(arg: Str) : Str               string concatenation
 //       substr(arg: Int, arg2: Int): Str     substring
-//       
+//
    install_class(
     new CgenNode(
-      class_(Str, 
+      class_(Str,
 	     Object,
              append_Features(
              append_Features(
@@ -741,14 +744,14 @@ void CgenClassTable::install_basic_classes()
              single_Features(attr(val, Int, no_expr())),
             single_Features(attr(str_field, prim_slot, no_expr()))),
             single_Features(method(length, nil_Formals(), Int, no_expr()))),
-            single_Features(method(concat, 
+            single_Features(method(concat,
 				   single_Formals(formal(arg, Str)),
-				   Str, 
+				   Str,
 				   no_expr()))),
-	    single_Features(method(substr, 
-				   append_Formals(single_Formals(formal(arg, Int)), 
+	    single_Features(method(substr,
+				   append_Formals(single_Formals(formal(arg, Int)),
 						  single_Formals(formal(arg2, Int))),
-				   Str, 
+				   Str,
 				   no_expr()))),
 	     filename),
         Basic,this));
@@ -862,7 +865,7 @@ CgenNode::CgenNode(Class_ nd, Basicness bstatus, CgenClassTableP ct) :
    parentnd(NULL),
    children(NULL),
    basic_status(bstatus)
-{ 
+{
    stringtable.add_string(name->get_string());          // Add class name to string table
 }
 
@@ -928,7 +931,7 @@ void leq_class::code(ostream &s) {
 void comp_class::code(ostream &s) {
 }
 
-void int_const_class::code(ostream& s)  
+void int_const_class::code(ostream& s)
 {
   //
   // Need to be sure we have an IntEntry *, not an arbitrary Symbol
